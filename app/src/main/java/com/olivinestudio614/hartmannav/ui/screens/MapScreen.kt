@@ -55,7 +55,9 @@ fun MapScreen(
 
         when (navState) {
             is NavigationState.Idle, is NavigationState.Error -> {
+                val errorMsg = (navState as? NavigationState.Error)?.message
                 SearchBar(
+                    errorMessage = errorMsg,
                     onSearch = { query -> viewModel.searchDestination(context, query) },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -111,10 +113,18 @@ fun MapScreen(
 @Composable
 private fun SearchBar(
     onSearch: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    errorMessage: String? = null
 ) {
     var query by remember { mutableStateOf("") }
     Column(modifier = modifier.fillMaxWidth()) {
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.error),
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },

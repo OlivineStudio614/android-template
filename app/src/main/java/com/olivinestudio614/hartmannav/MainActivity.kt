@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
         MapboxNavigationApp.attach(this)
         MapboxNavigationApp.registerObserver(object : MapboxNavigationObserver {
             override fun onAttached(mapboxNavigation: MapboxNavigation) {
+                mapboxNavigation.startTripSession()
                 mapboxNavigation.registerLocationObserver(viewModel.locationObserver)
                 mapboxNavigation.registerRouteProgressObserver(viewModel.routeProgressObserver)
                 mapboxNavigation.registerOffRouteObserver(viewModel.offRouteObserver)
