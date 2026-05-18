@@ -146,7 +146,7 @@ class NavigationViewModel : ViewModel() {
     val locationObserver = object : LocationObserver {
         override fun onNewRawLocation(rawLocation: Location) {
             lastKnownOrigin = Point.fromLngLat(rawLocation.longitude, rawLocation.latitude)
-            val speedMph = ((rawLocation.speed ?: 0.0) * 2.237).toFloat()
+            val speedMph = ((rawLocation.speed ?: 0.0) * MS_TO_MPH).toFloat()
             _currentSpeedMph.value = speedMph
             idleController.notifyMovement()
             checkSpeedWarning(speedMph)
@@ -234,5 +234,6 @@ class NavigationViewModel : ViewModel() {
 
     private companion object {
         const val METERS_PER_MILE = 1609f
+        const val MS_TO_MPH = 2.237
     }
 }

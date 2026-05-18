@@ -42,11 +42,11 @@ object HartmanPhraseLibrary {
         }
         is HartmanEvent.Turn.SlightLeft -> when (event.distance) {
             HartmanEvent.Turn.Distance.NOW -> TURN_SLIGHT_LEFT_NOW
-            else -> TURN_SLIGHT_LEFT_500
+            else -> TURN_SLIGHT_LEFT_500 // FEET_500 and FEET_200 both use the 500-ft cue; slight turns don't need a separate 200-ft prompt
         }
         is HartmanEvent.Turn.SlightRight -> when (event.distance) {
             HartmanEvent.Turn.Distance.NOW -> TURN_SLIGHT_RIGHT_NOW
-            else -> TURN_SLIGHT_RIGHT_500
+            else -> TURN_SLIGHT_RIGHT_500 // FEET_500 and FEET_200 both use the 500-ft cue; slight turns don't need a separate 200-ft prompt
         }
         is HartmanEvent.Continue -> CONTINUE
         is HartmanEvent.Recalculating -> when {
