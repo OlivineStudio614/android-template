@@ -125,7 +125,7 @@ class NavigationViewModel : ViewModel() {
     private fun startNavigation(nav: MapboxNavigation) {
         val state = _navState.value as? NavigationState.RoutePreview ?: return
         nav.setNavigationRoutes(state.routes)
-        nav.startTripSession()
+        // Trip session already started in MainActivity.onAttached — don't call again
         _navState.value = NavigationState.Navigating
         offRouteCount = 0
         announcedThisStep.clear()
@@ -135,7 +135,6 @@ class NavigationViewModel : ViewModel() {
     }
 
     private fun stopNavigation(nav: MapboxNavigation) {
-        nav.stopTripSession()
         nav.setNavigationRoutes(emptyList())
         idleController.stop()
         _navState.value = NavigationState.Idle
@@ -148,8 +147,10 @@ class NavigationViewModel : ViewModel() {
             lastKnownOrigin = Point.fromLngLat(rawLocation.longitude, rawLocation.latitude)
             val speedMph = ((rawLocation.speed ?: 0.0) * MS_TO_MPH).toFloat()
             _currentSpeedMph.value = speedMph
-            idleController.notifyMovement()
-            checkSpeedWarning(speedMph)
+            if (_navState.value is NavigationState.Navigating) {
+                idleController.notifyMovement()
+                checkSpeedWarning(speedMph)
+            }
         }
         override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {}
     }

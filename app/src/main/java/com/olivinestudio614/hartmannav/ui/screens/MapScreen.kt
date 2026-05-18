@@ -17,9 +17,13 @@ import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
-import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.GenericStyle
+import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
+import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
+import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
+import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
+import com.mapbox.maps.plugin.locationcomponent.location
 import com.olivinestudio614.hartmannav.navigation.NavigationState
 import com.olivinestudio614.hartmannav.navigation.NavigationViewModel
 import com.olivinestudio614.hartmannav.ui.theme.AmberAlert
@@ -33,24 +37,54 @@ fun MapScreen(
     viewModel: NavigationViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val navState by viewModel.navState.collectAsState()
     val instruction by viewModel.currentInstruction.collectAsState()
     val speedMph by viewModel.currentSpeedMph.collectAsState()
     val speedLimit by viewModel.speedLimitMph.collectAsState()
     val distanceRemaining by viewModel.distanceRemaining.collectAsState()
-    val context = LocalContext.current
 
     val mapViewportState = rememberMapViewportState()
 
-    // Center on user as soon as the screen opens
+    // Route line components — created once for the lifetime of this screen
+    val routeLineApi = remember { MapboxRouteLineApi(MapboxRouteLineApiOptions.Builder().build()) }
+    val routeLineView = remember { MapboxRouteLineView(MapboxRouteLineViewOptions.Builder(context).build()) }
+
+    // Holds references once the map and its style are ready
+    var mapboxMapRef by remember { mutableStateOf<com.mapbox.maps.MapboxMap?>(null) }
+    var mapStyleRef by remember { mutableStateOf<com.mapbox.maps.Style?>(null) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            routeLineApi.cancel()
+            routeLineView.cancel()
+        }
+    }
+
+    // Center on user immediately at launch
     LaunchedEffect(Unit) {
         mapViewportState.transitionToFollowPuckState()
     }
 
-    // Switch to navigation follow (with bearing) when active navigation starts
-    LaunchedEffect(navState) {
-        if (navState is NavigationState.Navigating) {
-            mapViewportState.transitionToFollowPuckState()
+    // React to nav state: draw/clear route line, switch camera mode
+    // Keyed on both navState and mapStyleRef so we retry once style loads
+    LaunchedEffect(navState, mapStyleRef) {
+        val style = mapStyleRef ?: return@LaunchedEffect
+        when (val state = navState) {
+            is NavigationState.RoutePreview -> {
+                routeLineApi.setNavigationRoutes(state.routes) { result ->
+                    routeLineView.renderRouteDrawData(style, result)
+                }
+            }
+            is NavigationState.Navigating -> {
+                mapViewportState.transitionToFollowPuckState()
+            }
+            is NavigationState.Idle, is NavigationState.Arrived -> {
+                routeLineApi.clearRouteLine { result ->
+                    routeLineView.renderClearRouteLineValue(style, result)
+                }
+            }
+            else -> {}
         }
     }
 
@@ -60,11 +94,23 @@ fun MapScreen(
             mapViewportState = mapViewportState,
             style = { GenericStyle(style = Style.DARK) }
         ) {
-            // Enable the location puck so the user can see where they are
             MapEffect(Unit) { mapView ->
                 mapView.location.apply {
                     enabled = true
                     pulsingEnabled = true
+                }
+                mapboxMapRef = mapView.mapboxMap
+                // Initialize route line layers whenever the style (re)loads
+                mapView.mapboxMap.subscribeStyleLoaded { _ ->
+                    mapView.mapboxMap.style?.let { style ->
+                        routeLineView.initializeLayers(style)
+                        mapStyleRef = style
+                    }
+                }
+                // Also init now if style is already loaded
+                mapView.mapboxMap.style?.let { style ->
+                    routeLineView.initializeLayers(style)
+                    mapStyleRef = style
                 }
             }
         }
