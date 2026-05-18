@@ -15,7 +15,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.Style
+import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.GenericStyle
 import com.olivinestudio614.hartmannav.navigation.NavigationState
@@ -40,6 +42,12 @@ fun MapScreen(
 
     val mapViewportState = rememberMapViewportState()
 
+    // Center on user as soon as the screen opens
+    LaunchedEffect(Unit) {
+        mapViewportState.transitionToFollowPuckState()
+    }
+
+    // Switch to navigation follow (with bearing) when active navigation starts
     LaunchedEffect(navState) {
         if (navState is NavigationState.Navigating) {
             mapViewportState.transitionToFollowPuckState()
@@ -51,7 +59,15 @@ fun MapScreen(
             modifier = Modifier.fillMaxSize(),
             mapViewportState = mapViewportState,
             style = { GenericStyle(style = Style.DARK) }
-        )
+        ) {
+            // Enable the location puck so the user can see where they are
+            MapEffect(Unit) { mapView ->
+                mapView.location.apply {
+                    enabled = true
+                    pulsingEnabled = true
+                }
+            }
+        }
 
         when (navState) {
             is NavigationState.Idle, is NavigationState.Error -> {
