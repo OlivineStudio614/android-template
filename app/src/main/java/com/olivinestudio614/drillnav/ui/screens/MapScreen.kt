@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -89,6 +90,8 @@ fun MapScreen(
         }
     }
 
+    val statusBarTopPx = WindowInsets.statusBars.getTop(LocalDensity.current)
+
     Box(modifier = modifier.fillMaxSize()) {
         MapboxMap(
             modifier = Modifier.fillMaxSize(),
@@ -96,6 +99,7 @@ fun MapScreen(
             style = { GenericStyle(style = Style.DARK) }
         ) {
             MapEffect(Unit) { mapView ->
+                mapView.scalebar.updateSettings { marginTop = statusBarTopPx.toFloat() }
                 mapView.location.apply {
                     enabled = true
                     pulsingEnabled = true
