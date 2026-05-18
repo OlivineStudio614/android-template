@@ -5,10 +5,11 @@ sealed class HartmanEvent {
 
     sealed class Turn : HartmanEvent() {
         enum class Distance { FEET_500, FEET_200, NOW }
-        data class Left(val distance: Distance) : Turn()
-        data class Right(val distance: Distance) : Turn()
-        data class SlightLeft(val distance: Distance) : Turn()
-        data class SlightRight(val distance: Distance) : Turn()
+        abstract val distance: Distance
+        data class Left(override val distance: Distance) : Turn()
+        data class Right(override val distance: Distance) : Turn()
+        data class SlightLeft(override val distance: Distance) : Turn()
+        data class SlightRight(override val distance: Distance) : Turn()
     }
 
     data object Continue : HartmanEvent()

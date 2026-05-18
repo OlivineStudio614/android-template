@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Collections
 import java.util.Locale
 
 class NavigationViewModel : ViewModel() {
@@ -50,11 +51,11 @@ class NavigationViewModel : ViewModel() {
 
     private var tts: HartmanTTS? = null
     private var mapboxNavigation: MapboxNavigation? = null
-    private var lastKnownOrigin: Point? = null
-    private var offRouteCount = 0
-    private val announcedThisStep = mutableSetOf<HartmanEvent.Turn.Distance>()
-    private var lastStepIndex = -1
-    private var lastSpeedWarnTime = 0L
+    @Volatile private var lastKnownOrigin: Point? = null
+    @Volatile private var offRouteCount = 0
+    private val announcedThisStep = Collections.synchronizedSet(mutableSetOf<HartmanEvent.Turn.Distance>())
+    @Volatile private var lastStepIndex = -1
+    @Volatile private var lastSpeedWarnTime = 0L
 
     private val idleController = IdleTauntController(viewModelScope) {
         speakEvent(HartmanEvent.IdleTaunt)
@@ -171,24 +172,18 @@ class NavigationViewModel : ViewModel() {
             announced = announcedThisStep
         )
         if (event != null) {
-            val distance = when (event) {
-                is HartmanEvent.Turn.Left -> event.distance
-                is HartmanEvent.Turn.Right -> event.distance
-                is HartmanEvent.Turn.SlightLeft -> event.distance
-                is HartmanEvent.Turn.SlightRight -> event.distance
-            }
-            announcedThisStep += distance
+            announcedThisStep += event.distance
             speakEvent(event)
         }
 
-        val distMiles = progress.distanceRemaining / 1609f
+        val distMiles = progress.distanceRemaining / METERS_PER_MILE
         _distanceRemaining.value = if (distMiles < 0.1f) {
             "${(distMiles * 5280).toInt()} ft"
         } else {
             "%.1f mi".format(distMiles)
         }
 
-        _currentInstruction.value = (stepProgress.step?.maneuver()?.instruction() ?: "").uppercase()
+        _currentInstruction.value = (stepProgress.step?.maneuver()?.instruction() ?: "").uppercase(Locale.US)
     }
 
     val offRouteObserver = OffRouteObserver { isOffRoute ->
@@ -235,5 +230,9 @@ class NavigationViewModel : ViewModel() {
     override fun onCleared() {
         idleController.stop()
         tts?.shutdown()
+    }
+
+    private companion object {
+        const val METERS_PER_MILE = 1609f
     }
 }

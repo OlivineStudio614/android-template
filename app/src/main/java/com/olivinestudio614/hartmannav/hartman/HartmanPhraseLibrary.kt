@@ -41,14 +41,12 @@ object HartmanPhraseLibrary {
             HartmanEvent.Turn.Distance.NOW -> TURN_RIGHT_NOW
         }
         is HartmanEvent.Turn.SlightLeft -> when (event.distance) {
-            HartmanEvent.Turn.Distance.FEET_500 -> TURN_SLIGHT_LEFT_500
-            HartmanEvent.Turn.Distance.FEET_200 -> TURN_SLIGHT_LEFT_500
             HartmanEvent.Turn.Distance.NOW -> TURN_SLIGHT_LEFT_NOW
+            else -> TURN_SLIGHT_LEFT_500
         }
         is HartmanEvent.Turn.SlightRight -> when (event.distance) {
-            HartmanEvent.Turn.Distance.FEET_500 -> TURN_SLIGHT_RIGHT_500
-            HartmanEvent.Turn.Distance.FEET_200 -> TURN_SLIGHT_RIGHT_500
             HartmanEvent.Turn.Distance.NOW -> TURN_SLIGHT_RIGHT_NOW
+            else -> TURN_SLIGHT_RIGHT_500
         }
         is HartmanEvent.Continue -> CONTINUE
         is HartmanEvent.Recalculating -> when {
