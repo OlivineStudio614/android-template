@@ -1,4 +1,4 @@
-package com.olivinestudio614.hartmannav.ui.theme
+package com.olivinestudio614.drillnav.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

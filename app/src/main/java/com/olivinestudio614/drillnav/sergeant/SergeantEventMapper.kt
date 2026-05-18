@@ -1,8 +1,8 @@
-package com.olivinestudio614.hartmannav.hartman
+package com.olivinestudio614.drillnav.sergeant
 
-import com.olivinestudio614.hartmannav.hartman.HartmanEvent.Turn.Distance
+import com.olivinestudio614.drillnav.sergeant.SergeantEvent.Turn.Distance
 
-object HartmanEventMapper {
+object SergeantEventMapper {
 
     private const val METERS_500FT = 152f
     private const val METERS_200FT = 61f
@@ -13,7 +13,7 @@ object HartmanEventMapper {
         maneuverModifier: String?,
         distanceRemainingMeters: Float,
         announced: Set<Distance>
-    ): HartmanEvent.Turn? {
+    ): SergeantEvent.Turn? {
         val direction = resolveDirection(maneuverModifier) ?: return null
 
         val threshold = when {
@@ -24,10 +24,10 @@ object HartmanEventMapper {
         }
 
         return when (direction) {
-            Direction.LEFT -> HartmanEvent.Turn.Left(threshold)
-            Direction.RIGHT -> HartmanEvent.Turn.Right(threshold)
-            Direction.SLIGHT_LEFT -> HartmanEvent.Turn.SlightLeft(threshold)
-            Direction.SLIGHT_RIGHT -> HartmanEvent.Turn.SlightRight(threshold)
+            Direction.LEFT -> SergeantEvent.Turn.Left(threshold)
+            Direction.RIGHT -> SergeantEvent.Turn.Right(threshold)
+            Direction.SLIGHT_LEFT -> SergeantEvent.Turn.SlightLeft(threshold)
+            Direction.SLIGHT_RIGHT -> SergeantEvent.Turn.SlightRight(threshold)
         }
     }
 

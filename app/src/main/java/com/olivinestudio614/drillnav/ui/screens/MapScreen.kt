@@ -1,4 +1,4 @@
-package com.olivinestudio614.hartmannav.ui.screens
+package com.olivinestudio614.drillnav.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,12 +24,12 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 import com.mapbox.maps.plugin.locationcomponent.location
-import com.olivinestudio614.hartmannav.navigation.NavigationState
-import com.olivinestudio614.hartmannav.navigation.NavigationViewModel
-import com.olivinestudio614.hartmannav.ui.theme.AmberAlert
-import com.olivinestudio614.hartmannav.ui.theme.ArmyGreenDark
-import com.olivinestudio614.hartmannav.ui.theme.OliveDrab
-import com.olivinestudio614.hartmannav.ui.theme.OffWhite
+import com.olivinestudio614.drillnav.navigation.NavigationState
+import com.olivinestudio614.drillnav.navigation.NavigationViewModel
+import com.olivinestudio614.drillnav.ui.theme.AmberAlert
+import com.olivinestudio614.drillnav.ui.theme.ArmyGreenDark
+import com.olivinestudio614.drillnav.ui.theme.OliveDrab
+import com.olivinestudio614.drillnav.ui.theme.OffWhite
 
 @OptIn(MapboxExperimental::class)
 @Composable

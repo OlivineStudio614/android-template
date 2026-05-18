@@ -1,4 +1,4 @@
-package com.olivinestudio614.hartmannav.navigation
+package com.olivinestudio614.drillnav.navigation
 
 import android.content.Context
 import android.location.Geocoder
@@ -23,11 +23,11 @@ import com.mapbox.navigation.core.replay.route.ReplayRouteMapper
 import com.mapbox.navigation.core.trip.session.OffRouteObserver
 import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
-import com.olivinestudio614.hartmannav.hartman.HartmanEvent
-import com.olivinestudio614.hartmannav.hartman.HartmanEventMapper
-import com.olivinestudio614.hartmannav.hartman.HartmanPhraseLibrary
-import com.olivinestudio614.hartmannav.hartman.HartmanTTS
-import com.olivinestudio614.hartmannav.hartman.IdleTauntController
+import com.olivinestudio614.drillnav.sergeant.SergeantEvent
+import com.olivinestudio614.drillnav.sergeant.SergeantEventMapper
+import com.olivinestudio614.drillnav.sergeant.SergeantPhraseLibrary
+import com.olivinestudio614.drillnav.sergeant.SergeantTTS
+import com.olivinestudio614.drillnav.sergeant.IdleTauntController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -59,21 +59,21 @@ class NavigationViewModel : ViewModel() {
 
     val navigationLocationProvider = NavigationLocationProvider()
 
-    private var tts: HartmanTTS? = null
+    private var tts: SergeantTTS? = null
     private var mapboxNavigation: MapboxNavigation? = null
     private var replayProgressObserver: ReplayProgressObserver? = null
     @Volatile private var lastKnownOrigin: Point? = null
     @Volatile private var offRouteCount = 0
-    private val announcedThisStep = Collections.synchronizedSet(mutableSetOf<HartmanEvent.Turn.Distance>())
+    private val announcedThisStep = Collections.synchronizedSet(mutableSetOf<SergeantEvent.Turn.Distance>())
     @Volatile private var lastStepIndex = -1
     @Volatile private var lastSpeedWarnTime = 0L
 
     private val idleController = IdleTauntController(viewModelScope) {
-        speakEvent(HartmanEvent.IdleTaunt)
+        speakEvent(SergeantEvent.IdleTaunt)
     }
 
     fun initTts(context: Context) {
-        if (tts == null) tts = HartmanTTS(context)
+        if (tts == null) tts = SergeantTTS(context)
     }
 
     fun toggleSimulation() {
@@ -166,7 +166,7 @@ class NavigationViewModel : ViewModel() {
         announcedThisStep.clear()
         lastStepIndex = -1
         idleController.start()
-        speakEvent(HartmanEvent.TripStart)
+        speakEvent(SergeantEvent.TripStart)
         if (_simulationMode.value) {
             val events = ReplayRouteMapper()
                 .mapDirectionsRouteGeometry(state.routes.first().directionsRoute)
@@ -219,7 +219,7 @@ class NavigationViewModel : ViewModel() {
         // upcomingStep = the next step whose maneuver is what the driver is about to do.
         // stepProgress.step is the CURRENT step's entry maneuver (already executed) — wrong source.
         val maneuver = legProgress.upcomingStep?.maneuver()
-        val event = HartmanEventMapper.mapTurnEvent(
+        val event = SergeantEventMapper.mapTurnEvent(
             maneuverType = maneuver?.type(),
             maneuverModifier = maneuver?.modifier(),
             distanceRemainingMeters = stepProgress.distanceRemaining,
@@ -243,7 +243,7 @@ class NavigationViewModel : ViewModel() {
     val offRouteObserver = OffRouteObserver { isOffRoute ->
         if (isOffRoute) {
             offRouteCount++
-            speakEvent(HartmanEvent.Recalculating(offRouteCount))
+            speakEvent(SergeantEvent.Recalculating(offRouteCount))
         }
     }
 
@@ -252,7 +252,7 @@ class NavigationViewModel : ViewModel() {
         override fun onNextRouteLegStart(routeLegProgress: RouteLegProgress) {}
         override fun onFinalDestinationArrival(routeProgress: RouteProgress) {
             idleController.stop()
-            speakEvent(HartmanEvent.Arrival)
+            speakEvent(SergeantEvent.Arrival)
             _navState.value = NavigationState.Arrived
         }
     }
@@ -265,12 +265,12 @@ class NavigationViewModel : ViewModel() {
         val now = System.currentTimeMillis()
         if (speedMph > limitMph + 5f && now - lastSpeedWarnTime > 30_000L) {
             lastSpeedWarnTime = now
-            speakEvent(HartmanEvent.SpeedWarning)
+            speakEvent(SergeantEvent.SpeedWarning)
         }
     }
 
-    private fun speakEvent(event: HartmanEvent) {
-        tts?.speak(HartmanPhraseLibrary.phraseFor(event))
+    private fun speakEvent(event: SergeantEvent) {
+        tts?.speak(SergeantPhraseLibrary.phraseFor(event))
     }
 
     @Suppress("DEPRECATION")

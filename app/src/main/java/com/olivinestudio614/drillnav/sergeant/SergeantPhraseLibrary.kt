@@ -1,62 +1,62 @@
-package com.olivinestudio614.hartmannav.hartman
+package com.olivinestudio614.drillnav.sergeant
 
-object HartmanPhraseLibrary {
+object SergeantPhraseLibrary {
 
     private val lastUsed = mutableMapOf<String, String>()
 
-    fun phraseFor(event: HartmanEvent): String {
+    fun phraseFor(event: SergeantEvent): String {
         val key = keyFor(event)
         val pool = poolFor(event)
         val available = if (pool.size > 1) pool.filter { it != lastUsed[key] } else pool
         return available.random().also { lastUsed[key] = it }
     }
 
-    private fun keyFor(event: HartmanEvent): String = when (event) {
-        is HartmanEvent.TripStart -> "trip_start"
-        is HartmanEvent.Turn.Left -> "turn_left_${event.distance.name}"
-        is HartmanEvent.Turn.Right -> "turn_right_${event.distance.name}"
-        is HartmanEvent.Turn.SlightLeft -> "turn_slight_left_${event.distance.name}"
-        is HartmanEvent.Turn.SlightRight -> "turn_slight_right_${event.distance.name}"
-        is HartmanEvent.Continue -> "continue"
-        is HartmanEvent.Recalculating -> when {
+    private fun keyFor(event: SergeantEvent): String = when (event) {
+        is SergeantEvent.TripStart -> "trip_start"
+        is SergeantEvent.Turn.Left -> "turn_left_${event.distance.name}"
+        is SergeantEvent.Turn.Right -> "turn_right_${event.distance.name}"
+        is SergeantEvent.Turn.SlightLeft -> "turn_slight_left_${event.distance.name}"
+        is SergeantEvent.Turn.SlightRight -> "turn_slight_right_${event.distance.name}"
+        is SergeantEvent.Continue -> "continue"
+        is SergeantEvent.Recalculating -> when {
             event.count == 1 -> "recalc_1"
             event.count == 2 -> "recalc_2"
             else -> "recalc_3plus"
         }
-        is HartmanEvent.SpeedWarning -> "speed_warning"
-        is HartmanEvent.IdleTaunt -> "idle_taunt"
-        is HartmanEvent.Arrival -> "arrival"
+        is SergeantEvent.SpeedWarning -> "speed_warning"
+        is SergeantEvent.IdleTaunt -> "idle_taunt"
+        is SergeantEvent.Arrival -> "arrival"
     }
 
-    private fun poolFor(event: HartmanEvent): List<String> = when (event) {
-        is HartmanEvent.TripStart -> TRIP_START
-        is HartmanEvent.Turn.Left -> when (event.distance) {
-            HartmanEvent.Turn.Distance.FEET_500 -> TURN_LEFT_500
-            HartmanEvent.Turn.Distance.FEET_200 -> TURN_LEFT_200
-            HartmanEvent.Turn.Distance.NOW -> TURN_LEFT_NOW
+    private fun poolFor(event: SergeantEvent): List<String> = when (event) {
+        is SergeantEvent.TripStart -> TRIP_START
+        is SergeantEvent.Turn.Left -> when (event.distance) {
+            SergeantEvent.Turn.Distance.FEET_500 -> TURN_LEFT_500
+            SergeantEvent.Turn.Distance.FEET_200 -> TURN_LEFT_200
+            SergeantEvent.Turn.Distance.NOW -> TURN_LEFT_NOW
         }
-        is HartmanEvent.Turn.Right -> when (event.distance) {
-            HartmanEvent.Turn.Distance.FEET_500 -> TURN_RIGHT_500
-            HartmanEvent.Turn.Distance.FEET_200 -> TURN_RIGHT_200
-            HartmanEvent.Turn.Distance.NOW -> TURN_RIGHT_NOW
+        is SergeantEvent.Turn.Right -> when (event.distance) {
+            SergeantEvent.Turn.Distance.FEET_500 -> TURN_RIGHT_500
+            SergeantEvent.Turn.Distance.FEET_200 -> TURN_RIGHT_200
+            SergeantEvent.Turn.Distance.NOW -> TURN_RIGHT_NOW
         }
-        is HartmanEvent.Turn.SlightLeft -> when (event.distance) {
-            HartmanEvent.Turn.Distance.NOW -> TURN_SLIGHT_LEFT_NOW
+        is SergeantEvent.Turn.SlightLeft -> when (event.distance) {
+            SergeantEvent.Turn.Distance.NOW -> TURN_SLIGHT_LEFT_NOW
             else -> TURN_SLIGHT_LEFT_500
         }
-        is HartmanEvent.Turn.SlightRight -> when (event.distance) {
-            HartmanEvent.Turn.Distance.NOW -> TURN_SLIGHT_RIGHT_NOW
+        is SergeantEvent.Turn.SlightRight -> when (event.distance) {
+            SergeantEvent.Turn.Distance.NOW -> TURN_SLIGHT_RIGHT_NOW
             else -> TURN_SLIGHT_RIGHT_500
         }
-        is HartmanEvent.Continue -> CONTINUE
-        is HartmanEvent.Recalculating -> when {
+        is SergeantEvent.Continue -> CONTINUE
+        is SergeantEvent.Recalculating -> when {
             event.count == 1 -> RECALCULATING_1
             event.count == 2 -> RECALCULATING_2
             else -> RECALCULATING_3PLUS
         }
-        is HartmanEvent.SpeedWarning -> SPEED_WARNING
-        is HartmanEvent.IdleTaunt -> IDLE_TAUNT
-        is HartmanEvent.Arrival -> ARRIVAL
+        is SergeantEvent.SpeedWarning -> SPEED_WARNING
+        is SergeantEvent.IdleTaunt -> IDLE_TAUNT
+        is SergeantEvent.Arrival -> ARRIVAL
     }
 
     // ── Phrase Library ──────────────────────────────────────────────────────
@@ -178,7 +178,7 @@ object HartmanPhraseLibrary {
         "I DO NOT KNOW WHAT THE HELL YOU ARE DOING, BUT STOP IT AND DRIVE. RIGHT NOW.",
         "ARE YOU SLEEPING? IS THAT WHAT IS HAPPENING RIGHT NOW? WAKE UP AND MOVE THIS GODDAMN VEHICLE.",
     )
-
+    
     private val ARRIVAL = listOf(
         "YOU HAVE REACHED YOUR DESTINATION. IT TOOK YOU LONG ENOUGH, YOU SLOW SON OF A BITCH. DISMISSED.",
         "OBJECTIVE COMPLETE. DO NOT CELEBRATE. YOU JUST DROVE A CAR. THAT IS THE BARE MINIMUM. AT EASE, MAGGOT.",

@@ -1,10 +1,10 @@
-package com.olivinestudio614.hartmannav.hartman
+package com.olivinestudio614.drillnav.sergeant
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
 import java.util.Locale
 
-class HartmanTTS(context: Context) {
+class SergeantTTS(context: Context) {
 
     private var tts: TextToSpeech? = null
     private var ready = false

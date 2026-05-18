@@ -11,7 +11,7 @@ plugins {
 }
 
 android {
-    namespace = "com.olivinestudio614.hartmannav"
+    namespace = "com.olivinestudio614.drillnav"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -19,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.olivinestudio614.hartmannav"
+        applicationId = "com.olivinestudio614.drillnav"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

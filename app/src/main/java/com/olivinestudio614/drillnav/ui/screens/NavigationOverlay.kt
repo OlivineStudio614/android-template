@@ -1,4 +1,4 @@
-package com.olivinestudio614.hartmannav.ui.screens
+package com.olivinestudio614.drillnav.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,11 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.olivinestudio614.hartmannav.ui.theme.AmberAlert
-import com.olivinestudio614.hartmannav.ui.theme.ArmyGreenDark
-import com.olivinestudio614.hartmannav.ui.theme.DangerRed
-import com.olivinestudio614.hartmannav.ui.theme.MapOverlayBg
-import com.olivinestudio614.hartmannav.ui.theme.OffWhite
+import com.olivinestudio614.drillnav.ui.theme.AmberAlert
+import com.olivinestudio614.drillnav.ui.theme.ArmyGreenDark
+import com.olivinestudio614.drillnav.ui.theme.DangerRed
+import com.olivinestudio614.drillnav.ui.theme.MapOverlayBg
+import com.olivinestudio614.drillnav.ui.theme.OffWhite
 
 @Composable
 fun TurnInstructionCard(

@@ -1,4 +1,4 @@
-package com.olivinestudio614.hartmannav.navigation
+package com.olivinestudio614.drillnav.navigation
 
 import com.mapbox.navigation.base.route.NavigationRoute
 

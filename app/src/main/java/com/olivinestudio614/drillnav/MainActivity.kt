@@ -1,4 +1,4 @@
-package com.olivinestudio614.hartmannav
+package com.olivinestudio614.drillnav
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -13,9 +13,9 @@ import androidx.core.content.ContextCompat
 import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.lifecycle.MapboxNavigationApp
 import com.mapbox.navigation.core.lifecycle.MapboxNavigationObserver
-import com.olivinestudio614.hartmannav.navigation.NavigationViewModel
-import com.olivinestudio614.hartmannav.ui.screens.MapScreen
-import com.olivinestudio614.hartmannav.ui.theme.HartmanNavTheme
+import com.olivinestudio614.drillnav.navigation.NavigationViewModel
+import com.olivinestudio614.drillnav.ui.screens.MapScreen
+import com.olivinestudio614.drillnav.ui.theme.DrillNavTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            HartmanNavTheme {
+            DrillNavTheme {
                 MapScreen(
                     viewModel = viewModel,
                     modifier = Modifier.fillMaxSize()

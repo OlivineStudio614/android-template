@@ -1,4 +1,4 @@
-package com.olivinestudio614.hartmannav.ui.theme
+package com.olivinestudio614.drillnav.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -19,7 +19,7 @@ private val MilitaryColorScheme = darkColorScheme(
 )
 
 @Composable
-fun HartmanNavTheme(content: @Composable () -> Unit) {
+fun DrillNavTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = MilitaryColorScheme,
         typography = MilitaryTypography,

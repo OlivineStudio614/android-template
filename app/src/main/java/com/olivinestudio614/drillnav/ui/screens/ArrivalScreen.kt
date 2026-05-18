@@ -1,4 +1,4 @@
-package com.olivinestudio614.hartmannav.ui.screens
+package com.olivinestudio614.drillnav.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.olivinestudio614.hartmannav.ui.theme.AmberAlert
-import com.olivinestudio614.hartmannav.ui.theme.ArmyGreenDark
-import com.olivinestudio614.hartmannav.ui.theme.OliveDrab
-import com.olivinestudio614.hartmannav.ui.theme.OffWhite
+import com.olivinestudio614.drillnav.ui.theme.AmberAlert
+import com.olivinestudio614.drillnav.ui.theme.ArmyGreenDark
+import com.olivinestudio614.drillnav.ui.theme.OliveDrab
+import com.olivinestudio614.drillnav.ui.theme.OffWhite
 
 @Composable
 fun ArrivalScreen(

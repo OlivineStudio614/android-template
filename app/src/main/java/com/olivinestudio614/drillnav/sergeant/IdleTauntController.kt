@@ -1,4 +1,4 @@
-package com.olivinestudio614.hartmannav.hartman
+package com.olivinestudio614.drillnav.sergeant
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
