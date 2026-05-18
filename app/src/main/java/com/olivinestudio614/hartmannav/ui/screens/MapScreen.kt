@@ -139,7 +139,7 @@ fun MapScreen(
                 )
             }
             is NavigationState.Navigating -> {
-                Column(modifier = Modifier.align(Alignment.TopCenter)) {
+                Column(modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding()) {
                     TurnInstructionCard(
                         instruction = instruction,
                         distanceRemaining = distanceRemaining
