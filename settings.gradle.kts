@@ -38,5 +38,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "HartmanNav"
+rootProject.name = "DrillNav"
 include(":app")
