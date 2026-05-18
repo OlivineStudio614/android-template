@@ -20,7 +20,6 @@ import com.mapbox.navigation.core.trip.session.LocationObserver
 import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
 import com.mapbox.navigation.core.replay.route.ReplayProgressObserver
 import com.mapbox.navigation.core.replay.route.ReplayRouteMapper
-import com.mapbox.navigation.core.replay.route.ReplayRouteOptions
 import com.mapbox.navigation.core.trip.session.OffRouteObserver
 import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
@@ -169,10 +168,7 @@ class NavigationViewModel : ViewModel() {
         idleController.start()
         speakEvent(HartmanEvent.TripStart)
         if (_simulationMode.value) {
-            val replayOptions = ReplayRouteOptions.Builder()
-                .maxSpeedMps(SIMULATION_SPEED_MPS)
-                .build()
-            val events = ReplayRouteMapper(replayOptions)
+            val events = ReplayRouteMapper()
                 .mapDirectionsRouteGeometry(state.routes.first().directionsRoute)
             nav.mapboxReplayer.pushEvents(events)
             nav.mapboxReplayer.playbackSpeed(SIMULATION_PLAYBACK_SPEED)
@@ -291,7 +287,6 @@ class NavigationViewModel : ViewModel() {
     private companion object {
         const val METERS_PER_MILE = 1609f
         const val MS_TO_MPH = 2.237
-        const val SIMULATION_SPEED_MPS = 17.9  // ~40 mph
-        const val SIMULATION_PLAYBACK_SPEED = 3.0
+        const val SIMULATION_PLAYBACK_SPEED = 2.0
     }
 }

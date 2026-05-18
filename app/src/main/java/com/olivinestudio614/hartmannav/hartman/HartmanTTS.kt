@@ -15,6 +15,7 @@ class HartmanTTS(context: Context) {
             if (status == TextToSpeech.SUCCESS) {
                 tts?.language = Locale.US
                 tts?.setSpeechRate(1.15f)
+                tts?.setPitch(0.75f)
                 ready = true
                 queue.forEach { speak(it) }
                 queue.clear()
