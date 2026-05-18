@@ -99,6 +99,7 @@ fun MapScreen(
                 mapView.location.apply {
                     enabled = true
                     pulsingEnabled = true
+                    setLocationProvider(viewModel.navigationLocationProvider)
                 }
                 mapboxMapRef = mapView.mapboxMap
                 // Initialize route line layers whenever the style (re)loads
