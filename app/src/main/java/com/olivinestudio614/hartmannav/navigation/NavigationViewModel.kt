@@ -216,7 +216,9 @@ class NavigationViewModel : ViewModel() {
             lastStepIndex = stepIndex
         }
 
-        val maneuver = stepProgress.step?.maneuver()
+        // upcomingStep = the next step whose maneuver is what the driver is about to do.
+        // stepProgress.step is the CURRENT step's entry maneuver (already executed) — wrong source.
+        val maneuver = legProgress.upcomingStep?.maneuver()
         val event = HartmanEventMapper.mapTurnEvent(
             maneuverType = maneuver?.type(),
             maneuverModifier = maneuver?.modifier(),
