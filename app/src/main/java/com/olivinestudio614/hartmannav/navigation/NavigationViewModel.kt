@@ -17,6 +17,9 @@ import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.arrival.ArrivalObserver
 import com.mapbox.navigation.core.trip.session.LocationMatcherResult
 import com.mapbox.navigation.core.trip.session.LocationObserver
+import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
+import com.mapbox.navigation.core.replay.route.ReplayProgressObserver
+import com.mapbox.navigation.core.replay.route.ReplayRouteMapper
 import com.mapbox.navigation.core.trip.session.OffRouteObserver
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.olivinestudio614.hartmannav.hartman.HartmanEvent
@@ -32,6 +35,7 @@ import kotlinx.coroutines.withContext
 import java.util.Collections
 import java.util.Locale
 
+@OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
 class NavigationViewModel : ViewModel() {
 
     private val _navState = MutableStateFlow<NavigationState>(NavigationState.Idle)
@@ -49,8 +53,12 @@ class NavigationViewModel : ViewModel() {
     private val _distanceRemaining = MutableStateFlow("")
     val distanceRemaining: StateFlow<String> = _distanceRemaining
 
+    private val _simulationMode = MutableStateFlow(false)
+    val simulationMode: StateFlow<Boolean> = _simulationMode
+
     private var tts: HartmanTTS? = null
     private var mapboxNavigation: MapboxNavigation? = null
+    private var replayProgressObserver: ReplayProgressObserver? = null
     @Volatile private var lastKnownOrigin: Point? = null
     @Volatile private var offRouteCount = 0
     private val announcedThisStep = Collections.synchronizedSet(mutableSetOf<HartmanEvent.Turn.Distance>())
@@ -65,9 +73,26 @@ class NavigationViewModel : ViewModel() {
         if (tts == null) tts = HartmanTTS(context)
     }
 
+    fun toggleSimulation() {
+        if (_navState.value !is NavigationState.Idle) return
+        _simulationMode.value = !_simulationMode.value
+    }
+
     fun setMapboxNavigation(nav: MapboxNavigation?) {
         mapboxNavigation = nav
+        if (nav != null) {
+            replayProgressObserver = ReplayProgressObserver(nav.mapboxReplayer)
+            if (_simulationMode.value) {
+                nav.startReplayTripSession()
+            } else {
+                nav.startTripSession()
+            }
+        } else {
+            replayProgressObserver = null
+        }
     }
+
+    fun getReplayProgressObserver(): ReplayProgressObserver? = replayProgressObserver
 
     fun searchDestination(context: Context, query: String) {
         _navState.value = NavigationState.Searching
@@ -125,16 +150,27 @@ class NavigationViewModel : ViewModel() {
     private fun startNavigation(nav: MapboxNavigation) {
         val state = _navState.value as? NavigationState.RoutePreview ?: return
         nav.setNavigationRoutes(state.routes)
-        // Trip session already started in MainActivity.onAttached — don't call again
         _navState.value = NavigationState.Navigating
         offRouteCount = 0
         announcedThisStep.clear()
         lastStepIndex = -1
         idleController.start()
         speakEvent(HartmanEvent.TripStart)
+        if (_simulationMode.value) {
+            val events = ReplayRouteMapper().mapDirectionsRouteGeometry(
+                state.routes.first().directionsRoute
+            )
+            nav.mapboxReplayer.pushEvents(events)
+            nav.mapboxReplayer.playbackSpeed(1.5)
+            nav.mapboxReplayer.play()
+        }
     }
 
     private fun stopNavigation(nav: MapboxNavigation) {
+        if (_simulationMode.value) {
+            nav.mapboxReplayer.stop()
+            nav.mapboxReplayer.clearEvents()
+        }
         nav.setNavigationRoutes(emptyList())
         idleController.stop()
         _navState.value = NavigationState.Idle

@@ -43,6 +43,7 @@ fun MapScreen(
     val speedMph by viewModel.currentSpeedMph.collectAsState()
     val speedLimit by viewModel.speedLimitMph.collectAsState()
     val distanceRemaining by viewModel.distanceRemaining.collectAsState()
+    val simulationMode by viewModel.simulationMode.collectAsState()
 
     val mapViewportState = rememberMapViewportState()
 
@@ -120,6 +121,8 @@ fun MapScreen(
                 val errorMsg = (navState as? NavigationState.Error)?.message
                 SearchBar(
                     errorMessage = errorMsg,
+                    simulationMode = simulationMode,
+                    onToggleSimulation = { viewModel.toggleSimulation() },
                     onSearch = { query -> viewModel.searchDestination(context, query) },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -176,17 +179,40 @@ fun MapScreen(
 private fun SearchBar(
     onSearch: (String) -> Unit,
     modifier: Modifier = Modifier,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    simulationMode: Boolean = false,
+    onToggleSimulation: () -> Unit = {}
 ) {
     var query by remember { mutableStateOf("") }
     Column(modifier = modifier.fillMaxWidth()) {
-        if (errorMessage != null) {
-            Text(
-                text = errorMessage,
-                style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.error),
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+            Button(
+                onClick = onToggleSimulation,
+                shape = RectangleShape,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (simulationMode) AmberAlert else ArmyGreenDark,
+                    contentColor = if (simulationMode) ArmyGreenDark else OffWhite.copy(alpha = 0.6f)
+                ),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                modifier = Modifier.height(32.dp)
+            ) {
+                Text("SIM ${if (simulationMode) "ON" else "OFF"}", style = MaterialTheme.typography.labelMedium)
+            }
         }
+        Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
