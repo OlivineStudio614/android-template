@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -192,6 +194,13 @@ fun MapScreen(
                 }
             }
         }
+
+        LocateMeButton(
+            onClick = { mapViewportState.transitionToFollowPuckState() },
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
+        )
     }
 }
 
@@ -348,6 +357,23 @@ private fun StopNavigationButton(
         Text(
             if (isSimActive) "ABORT SIM" else "ABORT",
             style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+@Composable
+private fun LocateMeButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier.size(48.dp),
+        colors = IconButtonDefaults.iconButtonColors(
+            containerColor = ArmyGreenDark,
+            contentColor = AmberAlert
+        )
+    ) {
+        Icon(
+            imageVector = Icons.Filled.MyLocation,
+            contentDescription = "Locate me"
         )
     }
 }
