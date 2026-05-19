@@ -31,6 +31,11 @@ class SergeantTTS(context: Context) {
         tts?.speak(text, TextToSpeech.QUEUE_ADD, null, text.hashCode().toString())
     }
 
+    fun stop() {
+        tts?.stop()
+        queue.clear()
+    }
+
     fun shutdown() {
         tts?.stop()
         tts?.shutdown()

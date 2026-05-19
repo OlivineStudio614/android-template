@@ -195,6 +195,7 @@ class NavigationViewModel : ViewModel() {
         }
         nav.setNavigationRoutes(emptyList())
         idleController.stop()
+        tts?.stop()
         _navState.value = NavigationState.Idle
     }
 
