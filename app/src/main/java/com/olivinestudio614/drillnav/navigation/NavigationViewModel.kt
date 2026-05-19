@@ -188,6 +188,8 @@ class NavigationViewModel : ViewModel() {
         if (_simulationMode.value) {
             nav.mapboxReplayer.stop()
             nav.mapboxReplayer.clearEvents()
+            nav.stopTripSession()
+            nav.startTripSession()
             _simulationMode.value = false
             _simPlaybackSpeed.value = 1.0f
         }
