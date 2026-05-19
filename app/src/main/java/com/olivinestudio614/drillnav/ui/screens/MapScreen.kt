@@ -1,7 +1,10 @@
 package com.olivinestudio614.drillnav.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -13,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.mapbox.search.result.SearchSuggestion
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.Style
@@ -28,6 +32,7 @@ import com.mapbox.maps.plugin.locationcomponent.location
 import com.olivinestudio614.drillnav.navigation.NavigationState
 import com.olivinestudio614.drillnav.navigation.NavigationViewModel
 import com.olivinestudio614.drillnav.ui.theme.AmberAlert
+import com.olivinestudio614.drillnav.ui.theme.ArmyGreen
 import com.olivinestudio614.drillnav.ui.theme.ArmyGreenDark
 import com.olivinestudio614.drillnav.ui.theme.OliveDrab
 import com.olivinestudio614.drillnav.ui.theme.OffWhite
@@ -46,6 +51,7 @@ fun MapScreen(
     val distanceRemaining by viewModel.distanceRemaining.collectAsState()
     val simulationMode by viewModel.simulationMode.collectAsState()
     val simSpeed by viewModel.simPlaybackSpeed.collectAsState()
+    val suggestions by viewModel.suggestions.collectAsState()
 
     val mapViewportState = rememberMapViewportState()
 
@@ -126,7 +132,10 @@ fun MapScreen(
                 SearchBar(
                     errorMessage = errorMsg,
                     simulationMode = simulationMode,
+                    suggestions = suggestions,
                     onToggleSimulation = { viewModel.toggleSimulation() },
+                    onQueryChange = { viewModel.onQueryChanged(it) },
+                    onSuggestionSelected = { viewModel.selectSuggestion(it) },
                     onSearch = { query -> viewModel.searchDestination(context, query) },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -192,7 +201,10 @@ private fun SearchBar(
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
     simulationMode: Boolean = false,
-    onToggleSimulation: () -> Unit = {}
+    suggestions: List<SearchSuggestion> = emptyList(),
+    onToggleSimulation: () -> Unit = {},
+    onQueryChange: (String) -> Unit = {},
+    onSuggestionSelected: (SearchSuggestion) -> Unit = {}
 ) {
     var query by remember { mutableStateOf("") }
     Column(modifier = modifier.fillMaxWidth()) {
@@ -223,10 +235,48 @@ private fun SearchBar(
                 Text("SIM ${if (simulationMode) "ON" else "OFF"}", style = MaterialTheme.typography.labelMedium)
             }
         }
+        if (suggestions.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(4.dp))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 240.dp)
+                    .background(ArmyGreenDark)
+            ) {
+                items(suggestions) { suggestion ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                query = suggestion.name
+                                onSuggestionSelected(suggestion)
+                            }
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text = suggestion.name,
+                            style = MaterialTheme.typography.bodyMedium.copy(color = OffWhite)
+                        )
+                        suggestion.descriptionText?.let { desc ->
+                            Text(
+                                text = desc,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = OffWhite.copy(alpha = 0.55f)
+                                )
+                            )
+                        }
+                    }
+                    HorizontalDivider(color = ArmyGreen.copy(alpha = 0.4f), thickness = 0.5.dp)
+                }
+            }
+        }
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = query,
-            onValueChange = { query = it },
+            onValueChange = {
+                query = it
+                onQueryChange(it)
+            },
             placeholder = {
                 Text(
                     text = "ENTER TARGET COORDINATES",

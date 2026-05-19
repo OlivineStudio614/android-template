@@ -28,7 +28,17 @@ import com.olivinestudio614.drillnav.sergeant.SergeantEventMapper
 import com.olivinestudio614.drillnav.sergeant.SergeantPhraseLibrary
 import com.olivinestudio614.drillnav.sergeant.SergeantTTS
 import com.olivinestudio614.drillnav.sergeant.IdleTauntController
+import com.mapbox.search.ResponseInfo
+import com.mapbox.search.SearchEngine
+import com.mapbox.search.SearchEngineSettings
+import com.mapbox.search.SearchOptions
+import com.mapbox.search.SearchSelectionCallback
+import com.mapbox.search.SearchSuggestionsCallback
+import com.mapbox.search.result.SearchResult
+import com.mapbox.search.result.SearchSuggestion
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -56,6 +66,14 @@ class NavigationViewModel : ViewModel() {
 
     private val _simulationMode = MutableStateFlow(false)
     val simulationMode: StateFlow<Boolean> = _simulationMode
+
+    private val _suggestions = MutableStateFlow<List<SearchSuggestion>>(emptyList())
+    val suggestions: StateFlow<List<SearchSuggestion>> = _suggestions
+
+    private val searchEngine = SearchEngine.createSearchEngineWithBuiltInDataProviders(
+        SearchEngineSettings()
+    )
+    private var suggestionsJob: Job? = null
 
     private val _simPlaybackSpeed = MutableStateFlow(1.0f)
     val simPlaybackSpeed: StateFlow<Float> = _simPlaybackSpeed
@@ -139,6 +157,55 @@ class NavigationViewModel : ViewModel() {
 
     fun dismissArrival() {
         _navState.value = NavigationState.Idle
+    }
+
+    fun onQueryChanged(query: String) {
+        suggestionsJob?.cancel()
+        if (query.length < 2) {
+            _suggestions.value = emptyList()
+            return
+        }
+        suggestionsJob = viewModelScope.launch {
+            delay(300)
+            searchEngine.search(
+                query,
+                SearchOptions(limit = 5),
+                object : SearchSuggestionsCallback {
+                    override fun onSuggestions(suggestions: List<SearchSuggestion>, responseInfo: ResponseInfo) {
+                        _suggestions.value = suggestions
+                    }
+                    override fun onError(e: Exception) {
+                        _suggestions.value = emptyList()
+                    }
+                }
+            )
+        }
+    }
+
+    fun selectSuggestion(suggestion: SearchSuggestion) {
+        _suggestions.value = emptyList()
+        suggestionsJob?.cancel()
+        _navState.value = NavigationState.Searching
+        searchEngine.select(
+            suggestion,
+            object : SearchSelectionCallback {
+                override fun onResult(suggestion: SearchSuggestion, result: SearchResult, responseInfo: ResponseInfo) {
+                    val coordinate = result.coordinate ?: run {
+                        _navState.value = NavigationState.Error("Could not resolve location")
+                        return
+                    }
+                    val nav = mapboxNavigation ?: run {
+                        _navState.value = NavigationState.Error("Navigation not ready")
+                        return
+                    }
+                    requestRoute(nav, coordinate)
+                }
+                override fun onSuggestions(suggestions: List<SearchSuggestion>, responseInfo: ResponseInfo) {}
+                override fun onError(e: Exception) {
+                    _navState.value = NavigationState.Error("Could not resolve location")
+                }
+            }
+        )
     }
 
     private fun requestRoute(nav: MapboxNavigation, destination: Point) {
@@ -297,6 +364,7 @@ class NavigationViewModel : ViewModel() {
     override fun onCleared() {
         idleController.stop()
         tts?.shutdown()
+        suggestionsJob?.cancel()
     }
 
     private companion object {

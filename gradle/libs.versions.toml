@@ -10,6 +10,7 @@ kotlin = "2.2.10"
 composeBom = "2026.02.01"
 mapboxMaps = "11.10.0"
 mapboxNavigationCore = "3.7.0"
+mapboxSearch = "2.7.0"
 kotlinxCoroutines = "1.9.0"
 mockk = "1.13.12"
 
@@ -31,6 +32,7 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 mapbox-maps = { group = "com.mapbox.maps", name = "android", version.ref = "mapboxMaps" }
 mapbox-maps-compose = { group = "com.mapbox.extension", name = "maps-compose", version.ref = "mapboxMaps" }
 mapbox-navigation = { group = "com.mapbox.navigationcore", name = "android", version.ref = "mapboxNavigationCore" }
+mapbox-search = { group = "com.mapbox.search", name = "mapbox-search-android", version.ref = "mapboxSearch" }
 lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }

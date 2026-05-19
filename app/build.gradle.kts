@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.mapbox.maps)
     implementation(libs.mapbox.maps.compose)
     implementation(libs.mapbox.navigation)
+    implementation(libs.mapbox.search)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.compose.ui.text.google.fonts)
