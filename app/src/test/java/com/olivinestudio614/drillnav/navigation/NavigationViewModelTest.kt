@@ -55,4 +55,31 @@ class NavigationViewModelTest {
         vm.setSimSpeed(3.0f)
         verify { mockReplayer.playbackSpeed(3.0) }
     }
+
+    @Test
+    fun `stopNavigation resets simulationMode to false when sim was on`() {
+        val mockReplayer = mockk<MapboxReplayer>(relaxed = true)
+        val mockNav = mockk<MapboxNavigation>(relaxed = true) {
+            every { mapboxReplayer } returns mockReplayer
+        }
+        val vm = NavigationViewModel()
+        vm.setMapboxNavigation(mockNav)
+        vm.toggleSimulation()           // sim ON (nav state is Idle)
+        vm.stopNavigation()
+        assertEquals(false, vm.simulationMode.value)
+    }
+
+    @Test
+    fun `stopNavigation resets simPlaybackSpeed to 1_0f when sim was on`() {
+        val mockReplayer = mockk<MapboxReplayer>(relaxed = true)
+        val mockNav = mockk<MapboxNavigation>(relaxed = true) {
+            every { mapboxReplayer } returns mockReplayer
+        }
+        val vm = NavigationViewModel()
+        vm.setMapboxNavigation(mockNav)
+        vm.toggleSimulation()           // sim ON
+        vm.setSimSpeed(3.5f)
+        vm.stopNavigation()
+        assertEquals(1.0f, vm.simPlaybackSpeed.value)
+    }
 }
