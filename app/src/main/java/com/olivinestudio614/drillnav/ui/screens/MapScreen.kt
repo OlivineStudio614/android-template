@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mapbox.search.result.SearchSuggestion
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -52,8 +51,6 @@ fun MapScreen(
     val speedMph by viewModel.currentSpeedMph.collectAsState()
     val speedLimit by viewModel.speedLimitMph.collectAsState()
     val distanceRemaining by viewModel.distanceRemaining.collectAsState()
-    val simulationMode by viewModel.simulationMode.collectAsState()
-    val simSpeed by viewModel.simPlaybackSpeed.collectAsState()
     val suggestions by viewModel.suggestions.collectAsState()
     val currentLocation by viewModel.currentLocation.collectAsState()
 
@@ -135,9 +132,7 @@ fun MapScreen(
                 val errorMsg = (navState as? NavigationState.Error)?.message
                 SearchBar(
                     errorMessage = errorMsg,
-                    simulationMode = simulationMode,
                     suggestions = suggestions,
-                    onToggleSimulation = { viewModel.toggleSimulation() },
                     onQueryChange = { viewModel.onQueryChanged(it) },
                     onSuggestionSelected = { viewModel.selectSuggestion(it) },
                     onSearch = { query -> viewModel.searchDestination(context, query) },
@@ -164,16 +159,9 @@ fun MapScreen(
                         currentSpeedMph = speedMph,
                         speedLimitMph = speedLimit
                     )
-                    if (simulationMode) {
-                        SimSpeedSlider(
-                            speed = simSpeed,
-                            onSpeedChange = { viewModel.setSimSpeed(it) }
-                        )
-                    }
                 }
                 StopNavigationButton(
                     onStop = { viewModel.stopNavigation() },
-                    isSimActive = simulationMode,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp)
@@ -220,40 +208,18 @@ private fun SearchBar(
     onSearch: (String) -> Unit,
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
-    simulationMode: Boolean = false,
     suggestions: List<SearchSuggestion> = emptyList(),
-    onToggleSimulation: () -> Unit = {},
     onQueryChange: (String) -> Unit = {},
     onSuggestionSelected: (SearchSuggestion) -> Unit = {}
 ) {
     var query by remember { mutableStateOf("") }
     Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (errorMessage != null) {
-                Text(
-                    text = errorMessage,
-                    style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.error),
-                    modifier = Modifier.weight(1f)
-                )
-            } else {
-                Spacer(modifier = Modifier.weight(1f))
-            }
-            Button(
-                onClick = onToggleSimulation,
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (simulationMode) AmberAlert else ArmyGreenDark,
-                    contentColor = if (simulationMode) ArmyGreenDark else OffWhite.copy(alpha = 0.6f)
-                ),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                modifier = Modifier.height(32.dp)
-            ) {
-                Text("SIM ${if (simulationMode) "ON" else "OFF"}", style = MaterialTheme.typography.labelMedium)
-            }
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.error),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
         if (suggestions.isNotEmpty()) {
             Spacer(modifier = Modifier.height(4.dp))
@@ -353,7 +319,6 @@ private fun StartNavigationButton(onStart: () -> Unit, modifier: Modifier = Modi
 @Composable
 private fun StopNavigationButton(
     onStop: () -> Unit,
-    isSimActive: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Button(
@@ -365,10 +330,7 @@ private fun StopNavigationButton(
         ),
         modifier = modifier
     ) {
-        Text(
-            if (isSimActive) "ABORT SIM" else "ABORT",
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Text("ABORT", style = MaterialTheme.typography.bodyLarge)
     }
 }
 
@@ -389,40 +351,3 @@ private fun LocateMeButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun SimSpeedSlider(
-    speed: Float,
-    onSpeedChange: (Float) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(ArmyGreenDark)
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "SIM",
-            style = MaterialTheme.typography.labelSmall.copy(color = AmberAlert),
-            modifier = Modifier.width(28.dp)
-        )
-        Slider(
-            value = speed,
-            onValueChange = onSpeedChange,
-            valueRange = 0.5f..5.0f,
-            modifier = Modifier.weight(1f),
-            colors = SliderDefaults.colors(
-                thumbColor = AmberAlert,
-                activeTrackColor = AmberAlert,
-                inactiveTrackColor = OliveDrab
-            )
-        )
-        Text(
-            text = "${"%.1f".format(speed)}×",
-            style = MaterialTheme.typography.labelSmall.copy(color = AmberAlert),
-            modifier = Modifier.width(36.dp),
-            textAlign = TextAlign.End
-        )
-    }
-}

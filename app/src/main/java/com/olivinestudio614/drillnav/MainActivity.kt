@@ -59,22 +59,15 @@ class MainActivity : ComponentActivity() {
         MapboxNavigationApp.attach(this)
         MapboxNavigationApp.registerObserver(object : MapboxNavigationObserver {
             override fun onAttached(mapboxNavigation: MapboxNavigation) {
-                // setMapboxNavigation first — it starts the trip session and creates replayProgressObserver
                 viewModel.setMapboxNavigation(mapboxNavigation)
                 mapboxNavigation.registerLocationObserver(viewModel.locationObserver)
                 mapboxNavigation.registerRouteProgressObserver(viewModel.routeProgressObserver)
-                viewModel.getReplayProgressObserver()?.let {
-                    mapboxNavigation.registerRouteProgressObserver(it)
-                }
                 mapboxNavigation.registerOffRouteObserver(viewModel.offRouteObserver)
                 mapboxNavigation.registerArrivalObserver(viewModel.arrivalObserver)
             }
             override fun onDetached(mapboxNavigation: MapboxNavigation) {
                 mapboxNavigation.unregisterLocationObserver(viewModel.locationObserver)
                 mapboxNavigation.unregisterRouteProgressObserver(viewModel.routeProgressObserver)
-                viewModel.getReplayProgressObserver()?.let {
-                    mapboxNavigation.unregisterRouteProgressObserver(it)
-                }
                 mapboxNavigation.unregisterOffRouteObserver(viewModel.offRouteObserver)
                 mapboxNavigation.unregisterArrivalObserver(viewModel.arrivalObserver)
                 viewModel.setMapboxNavigation(null)
