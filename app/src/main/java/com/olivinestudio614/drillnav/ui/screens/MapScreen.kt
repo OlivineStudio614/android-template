@@ -44,6 +44,7 @@ fun MapScreen(
     val speedLimit by viewModel.speedLimitMph.collectAsState()
     val distanceRemaining by viewModel.distanceRemaining.collectAsState()
     val simulationMode by viewModel.simulationMode.collectAsState()
+    val simSpeed by viewModel.simPlaybackSpeed.collectAsState()
 
     val mapViewportState = rememberMapViewportState()
 
@@ -149,9 +150,16 @@ fun MapScreen(
                         currentSpeedMph = speedMph,
                         speedLimitMph = speedLimit
                     )
+                    if (simulationMode) {
+                        SimSpeedSlider(
+                            speed = simSpeed,
+                            onSpeedChange = { viewModel.setSimSpeed(it) }
+                        )
+                    }
                 }
                 StopNavigationButton(
                     onStop = { viewModel.stopNavigation() },
+                    isSimActive = simulationMode,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp)
@@ -272,7 +280,11 @@ private fun StartNavigationButton(onStart: () -> Unit, modifier: Modifier = Modi
 }
 
 @Composable
-private fun StopNavigationButton(onStop: () -> Unit, modifier: Modifier = Modifier) {
+private fun StopNavigationButton(
+    onStop: () -> Unit,
+    isSimActive: Boolean = false,
+    modifier: Modifier = Modifier
+) {
     Button(
         onClick = onStop,
         shape = RectangleShape,
@@ -282,6 +294,47 @@ private fun StopNavigationButton(onStop: () -> Unit, modifier: Modifier = Modifi
         ),
         modifier = modifier
     ) {
-        Text("ABORT", style = MaterialTheme.typography.bodyLarge)
+        Text(
+            if (isSimActive) "ABORT SIM" else "ABORT",
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+@Composable
+private fun SimSpeedSlider(
+    speed: Float,
+    onSpeedChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(ArmyGreenDark)
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "SIM",
+            style = MaterialTheme.typography.labelSmall.copy(color = AmberAlert),
+            modifier = Modifier.width(28.dp)
+        )
+        Slider(
+            value = speed,
+            onValueChange = onSpeedChange,
+            valueRange = 0.5f..5.0f,
+            modifier = Modifier.weight(1f),
+            colors = SliderDefaults.colors(
+                thumbColor = AmberAlert,
+                activeTrackColor = AmberAlert,
+                inactiveTrackColor = ArmyGreenDark
+            )
+        )
+        Text(
+            text = "${"%.1f".format(speed)}×",
+            style = MaterialTheme.typography.labelSmall.copy(color = AmberAlert),
+            modifier = Modifier.width(36.dp),
+            textAlign = androidx.compose.ui.text.style.TextAlign.End
+        )
     }
 }
