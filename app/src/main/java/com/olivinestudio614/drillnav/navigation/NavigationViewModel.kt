@@ -200,6 +200,19 @@ class NavigationViewModel : ViewModel() {
                     }
                     requestRoute(nav, coordinate)
                 }
+                override fun onResults(suggestion: SearchSuggestion, results: List<SearchResult>, responseInfo: ResponseInfo) {
+                    results.firstOrNull()?.let { result ->
+                        val coordinate = result.coordinate ?: run {
+                            _navState.value = NavigationState.Error("Could not resolve location")
+                            return
+                        }
+                        val nav = mapboxNavigation ?: run {
+                            _navState.value = NavigationState.Error("Navigation not ready")
+                            return
+                        }
+                        requestRoute(nav, coordinate)
+                    }
+                }
                 override fun onSuggestions(suggestions: List<SearchSuggestion>, responseInfo: ResponseInfo) {}
                 override fun onError(e: Exception) {
                     _navState.value = NavigationState.Error("Could not resolve location")
