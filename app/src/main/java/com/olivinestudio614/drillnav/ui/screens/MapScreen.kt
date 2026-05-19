@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mapbox.maps.MapboxExperimental
@@ -334,7 +335,7 @@ private fun SimSpeedSlider(
             text = "${"%.1f".format(speed)}×",
             style = MaterialTheme.typography.labelSmall.copy(color = AmberAlert),
             modifier = Modifier.width(36.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.End
+            textAlign = TextAlign.End
         )
     }
 }
