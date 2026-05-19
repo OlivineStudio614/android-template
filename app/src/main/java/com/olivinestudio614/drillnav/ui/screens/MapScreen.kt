@@ -198,8 +198,8 @@ fun MapScreen(
         LocateMeButton(
             onClick = { mapViewportState.transitionToFollowPuckState() },
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp)
+                .align(Alignment.CenterEnd)
+                .padding(end = 16.dp)
         )
     }
 }
