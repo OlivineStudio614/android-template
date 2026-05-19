@@ -336,12 +336,12 @@ class NavigationViewModel : ViewModel() {
             lastStepIndex = stepIndex
         }
 
-        // upcomingStep = the next step whose maneuver is what the driver is about to do.
-        // stepProgress.step is the CURRENT step's entry maneuver (already executed) — wrong source.
-        val maneuver = legProgress.upcomingStep?.maneuver()
+        // bannerInstructions.primary() is the SDK's authoritative upcoming instruction —
+        // more reliable than upcomingStep.maneuver() which can be off during step transitions.
+        val primary = progress.bannerInstructions?.primary()
         val event = SergeantEventMapper.mapTurnEvent(
-            maneuverType = maneuver?.type(),
-            maneuverModifier = maneuver?.modifier(),
+            maneuverType = primary?.type(),
+            maneuverModifier = primary?.modifier(),
             distanceRemainingMeters = stepProgress.distanceRemaining,
             announced = announcedThisStep
         )
