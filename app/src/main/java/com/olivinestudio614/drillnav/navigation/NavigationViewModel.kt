@@ -2,6 +2,7 @@ package com.olivinestudio614.drillnav.navigation
 
 import android.content.Context
 import android.location.Geocoder
+import android.location.LocationManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mapbox.api.directions.v5.models.RouteOptions
@@ -282,6 +283,7 @@ class NavigationViewModel : ViewModel() {
             nav.startTripSession()
             _simulationMode.value = false
             _simPlaybackSpeed.value = 1.0f
+            snapPuckToRealGps()
         }
         nav.setNavigationRoutes(emptyList())
         _speedLimitMph.value = 0f
@@ -398,6 +400,25 @@ class NavigationViewModel : ViewModel() {
             ?.firstOrNull()
             ?.let { Point.fromLngLat(it.longitude, it.latitude) }
     } catch (e: Exception) { null }
+
+    private fun snapPuckToRealGps() {
+        val ctx = appContext ?: return
+        try {
+            val lm = ctx.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return
+            @Suppress("MissingPermission")
+            val androidLoc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                ?: return
+            val mapboxLoc = Location.Builder()
+                .latitude(androidLoc.latitude)
+                .longitude(androidLoc.longitude)
+                .bearing(androidLoc.bearing.toDouble())
+                .timestamp(androidLoc.time)
+                .build()
+            navigationLocationProvider.changePosition(mapboxLoc)
+            _currentLocation.value = Point.fromLngLat(androidLoc.longitude, androidLoc.latitude)
+        } catch (_: Exception) {}
+    }
 
     override fun onCleared() {
         idleController.stop()
