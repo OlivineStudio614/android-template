@@ -73,6 +73,9 @@ class NavigationViewModel : ViewModel() {
     private val _suggestions = MutableStateFlow<List<SearchSuggestion>>(emptyList())
     val suggestions: StateFlow<List<SearchSuggestion>> = _suggestions
 
+    private val _currentLocation = MutableStateFlow<Point?>(null)
+    val currentLocation: StateFlow<Point?> = _currentLocation
+
     private val speedInfoApi = MapboxSpeedInfoApi()
 
     private val searchEngine = SearchEngine.createSearchEngineWithBuiltInDataProviders(
@@ -291,7 +294,9 @@ class NavigationViewModel : ViewModel() {
 
     val locationObserver = object : LocationObserver {
         override fun onNewRawLocation(rawLocation: Location) {
-            lastKnownOrigin = Point.fromLngLat(rawLocation.longitude, rawLocation.latitude)
+            val point = Point.fromLngLat(rawLocation.longitude, rawLocation.latitude)
+            lastKnownOrigin = point
+            _currentLocation.value = point
             val speedMph = ((rawLocation.speed ?: 0.0) * MS_TO_MPH).toFloat()
             _currentSpeedMph.value = speedMph
             if (_navState.value is NavigationState.Navigating) {

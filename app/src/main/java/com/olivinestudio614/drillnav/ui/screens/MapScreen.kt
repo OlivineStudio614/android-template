@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mapbox.search.result.SearchSuggestion
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapEffect
@@ -54,6 +55,7 @@ fun MapScreen(
     val simulationMode by viewModel.simulationMode.collectAsState()
     val simSpeed by viewModel.simPlaybackSpeed.collectAsState()
     val suggestions by viewModel.suggestions.collectAsState()
+    val currentLocation by viewModel.currentLocation.collectAsState()
 
     val mapViewportState = rememberMapViewportState()
 
@@ -196,7 +198,16 @@ fun MapScreen(
         }
 
         LocateMeButton(
-            onClick = { mapViewportState.transitionToFollowPuckState() },
+            onClick = {
+                val loc = currentLocation
+                if (loc != null) {
+                    mapViewportState.easeTo(
+                        CameraOptions.Builder().center(loc).zoom(16.0).build()
+                    )
+                } else {
+                    mapViewportState.transitionToFollowPuckState()
+                }
+            },
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(end = 16.dp)
