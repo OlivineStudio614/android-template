@@ -28,6 +28,9 @@ import com.olivinestudio614.drillnav.sergeant.SergeantEventMapper
 import com.olivinestudio614.drillnav.sergeant.SergeantPhraseLibrary
 import com.olivinestudio614.drillnav.sergeant.SergeantTTS
 import com.olivinestudio614.drillnav.sergeant.IdleTauntController
+import com.mapbox.navigation.base.formatter.DistanceFormatterOptions
+import com.mapbox.navigation.base.speed.model.SpeedUnit
+import com.mapbox.navigation.tripdata.speedlimit.api.MapboxSpeedInfoApi
 import com.mapbox.search.ResponseInfo
 import com.mapbox.search.SearchEngine
 import com.mapbox.search.SearchEngineSettings
@@ -70,6 +73,8 @@ class NavigationViewModel : ViewModel() {
     private val _suggestions = MutableStateFlow<List<SearchSuggestion>>(emptyList())
     val suggestions: StateFlow<List<SearchSuggestion>> = _suggestions
 
+    private val speedInfoApi = MapboxSpeedInfoApi()
+
     private val searchEngine = SearchEngine.createSearchEngineWithBuiltInDataProviders(
         SearchEngineSettings()
     )
@@ -80,6 +85,7 @@ class NavigationViewModel : ViewModel() {
 
     val navigationLocationProvider = NavigationLocationProvider()
 
+    private var appContext: Context? = null
     private var tts: SergeantTTS? = null
     private var mapboxNavigation: MapboxNavigation? = null
     private var replayProgressObserver: ReplayProgressObserver? = null
@@ -94,6 +100,7 @@ class NavigationViewModel : ViewModel() {
     }
 
     fun initTts(context: Context) {
+        appContext = context.applicationContext
         if (tts == null) tts = SergeantTTS(context)
     }
 
@@ -274,6 +281,7 @@ class NavigationViewModel : ViewModel() {
             _simPlaybackSpeed.value = 1.0f
         }
         nav.setNavigationRoutes(emptyList())
+        _speedLimitMph.value = 0f
         idleController.stop()
         tts?.stop()
         _navState.value = NavigationState.Idle
@@ -296,6 +304,18 @@ class NavigationViewModel : ViewModel() {
                 location = locationMatcherResult.enhancedLocation,
                 keyPoints = locationMatcherResult.keyPoints,
             )
+            val ctx = appContext
+            if (ctx != null) {
+                val formatterOptions = DistanceFormatterOptions.Builder(ctx).build()
+                val speedInfo = speedInfoApi.updatePostedAndCurrentSpeed(locationMatcherResult, formatterOptions)
+                val posted = speedInfo?.postedSpeed
+                _speedLimitMph.value = if (posted != null) {
+                    when (speedInfo?.postedSpeedUnit) {
+                        SpeedUnit.MILES_PER_HOUR -> posted.toFloat()
+                        else -> posted / 1.609f
+                    }
+                } else 0f
+            }
         }
     }
 
