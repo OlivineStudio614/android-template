@@ -62,12 +62,14 @@ class MainActivity : ComponentActivity() {
                 viewModel.setMapboxNavigation(mapboxNavigation)
                 mapboxNavigation.registerLocationObserver(viewModel.locationObserver)
                 mapboxNavigation.registerRouteProgressObserver(viewModel.routeProgressObserver)
+                mapboxNavigation.registerVoiceInstructionsObserver(viewModel.voiceInstructionsObserver)
                 mapboxNavigation.registerOffRouteObserver(viewModel.offRouteObserver)
                 mapboxNavigation.registerArrivalObserver(viewModel.arrivalObserver)
             }
             override fun onDetached(mapboxNavigation: MapboxNavigation) {
                 mapboxNavigation.unregisterLocationObserver(viewModel.locationObserver)
                 mapboxNavigation.unregisterRouteProgressObserver(viewModel.routeProgressObserver)
+                mapboxNavigation.unregisterVoiceInstructionsObserver(viewModel.voiceInstructionsObserver)
                 mapboxNavigation.unregisterOffRouteObserver(viewModel.offRouteObserver)
                 mapboxNavigation.unregisterArrivalObserver(viewModel.arrivalObserver)
                 viewModel.setMapboxNavigation(null)

@@ -2,7 +2,6 @@ package com.olivinestudio614.drillnav.navigation
 
 import android.content.Context
 import android.location.Geocoder
-import android.location.LocationManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mapbox.api.directions.v5.models.RouteOptions
@@ -18,14 +17,11 @@ import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.arrival.ArrivalObserver
 import com.mapbox.navigation.core.trip.session.LocationMatcherResult
 import com.mapbox.navigation.core.trip.session.LocationObserver
-import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
-import com.mapbox.navigation.core.replay.route.ReplayProgressObserver
-import com.mapbox.navigation.core.replay.route.ReplayRouteMapper
 import com.mapbox.navigation.core.trip.session.OffRouteObserver
+import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
 import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.olivinestudio614.drillnav.sergeant.SergeantEvent
-import com.olivinestudio614.drillnav.sergeant.SergeantEventMapper
 import com.olivinestudio614.drillnav.sergeant.SergeantPhraseLibrary
 import com.olivinestudio614.drillnav.sergeant.SergeantTTS
 import com.olivinestudio614.drillnav.sergeant.IdleTauntController
@@ -47,10 +43,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Collections
 import java.util.Locale
 
-@OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
 class NavigationViewModel : ViewModel() {
 
     private val _navState = MutableStateFlow<NavigationState>(NavigationState.Idle)
@@ -68,9 +62,6 @@ class NavigationViewModel : ViewModel() {
     private val _distanceRemaining = MutableStateFlow("")
     val distanceRemaining: StateFlow<String> = _distanceRemaining
 
-    private val _simulationMode = MutableStateFlow(false)
-    val simulationMode: StateFlow<Boolean> = _simulationMode
-
     private val _suggestions = MutableStateFlow<List<SearchSuggestion>>(emptyList())
     val suggestions: StateFlow<List<SearchSuggestion>> = _suggestions
 
@@ -84,19 +75,14 @@ class NavigationViewModel : ViewModel() {
     )
     private var suggestionsJob: Job? = null
 
-    private val _simPlaybackSpeed = MutableStateFlow(1.0f)
-    val simPlaybackSpeed: StateFlow<Float> = _simPlaybackSpeed
-
     val navigationLocationProvider = NavigationLocationProvider()
 
     private var appContext: Context? = null
     private var tts: SergeantTTS? = null
     private var mapboxNavigation: MapboxNavigation? = null
-    private var replayProgressObserver: ReplayProgressObserver? = null
     @Volatile private var lastKnownOrigin: Point? = null
     @Volatile private var offRouteCount = 0
-    private val announcedThisStep = Collections.synchronizedSet(mutableSetOf<SergeantEvent.Turn.Distance>())
-    @Volatile private var lastStepIndex = -1
+    @Volatile private var currentBannerModifier: String? = null
     @Volatile private var lastSpeedWarnTime = 0L
 
     private val idleController = IdleTauntController(viewModelScope) {
@@ -108,39 +94,12 @@ class NavigationViewModel : ViewModel() {
         if (tts == null) tts = SergeantTTS(context)
     }
 
-    fun setSimSpeed(speed: Float) {
-        _simPlaybackSpeed.value = speed
-        mapboxNavigation?.mapboxReplayer?.playbackSpeed(speed.toDouble())
-    }
-
-    fun toggleSimulation() {
-        if (_navState.value !is NavigationState.Idle) return
-        val nav = mapboxNavigation ?: return
-        _simulationMode.value = !_simulationMode.value
-        // Restart session so the new mode takes effect immediately
-        nav.stopTripSession()
-        if (_simulationMode.value) {
-            nav.startReplayTripSession()
-        } else {
-            nav.startTripSession()
-        }
-    }
-
     fun setMapboxNavigation(nav: MapboxNavigation?) {
         mapboxNavigation = nav
         if (nav != null) {
-            replayProgressObserver = ReplayProgressObserver(nav.mapboxReplayer)
-            if (_simulationMode.value) {
-                nav.startReplayTripSession()
-            } else {
-                nav.startTripSession()
-            }
-        } else {
-            replayProgressObserver = null
+            nav.startTripSession()
         }
     }
-
-    fun getReplayProgressObserver(): ReplayProgressObserver? = replayProgressObserver
 
     fun searchDestination(context: Context, query: String) {
         _navState.value = NavigationState.Searching
@@ -262,29 +221,12 @@ class NavigationViewModel : ViewModel() {
         nav.setNavigationRoutes(state.routes)
         _navState.value = NavigationState.Navigating
         offRouteCount = 0
-        announcedThisStep.clear()
-        lastStepIndex = -1
+        currentBannerModifier = null
         idleController.start()
         speakEvent(SergeantEvent.TripStart)
-        if (_simulationMode.value) {
-            val events = ReplayRouteMapper()
-                .mapDirectionsRouteGeometry(state.routes.first().directionsRoute)
-            nav.mapboxReplayer.pushEvents(events)
-            nav.mapboxReplayer.playbackSpeed(_simPlaybackSpeed.value.toDouble())
-            nav.mapboxReplayer.play()
-        }
     }
 
     private fun stopNavigation(nav: MapboxNavigation) {
-        if (_simulationMode.value) {
-            nav.mapboxReplayer.stop()
-            nav.mapboxReplayer.clearEvents()
-            nav.stopTripSession()
-            nav.startTripSession()
-            _simulationMode.value = false
-            _simPlaybackSpeed.value = 1.0f
-            snapPuckToRealGps()
-        }
         nav.setNavigationRoutes(emptyList())
         _speedLimitMph.value = 0f
         idleController.stop()
@@ -329,26 +271,9 @@ class NavigationViewModel : ViewModel() {
     val routeProgressObserver = RouteProgressObserver { progress ->
         val legProgress = progress.currentLegProgress ?: return@RouteProgressObserver
         val stepProgress = legProgress.currentStepProgress ?: return@RouteProgressObserver
-        val stepIndex = stepProgress.stepIndex
 
-        if (stepIndex != lastStepIndex) {
-            announcedThisStep.clear()
-            lastStepIndex = stepIndex
-        }
-
-        // bannerInstructions.primary() is the SDK's authoritative upcoming instruction —
-        // more reliable than upcomingStep.maneuver() which can be off during step transitions.
-        val primary = progress.bannerInstructions?.primary()
-        val event = SergeantEventMapper.mapTurnEvent(
-            maneuverType = primary?.type(),
-            maneuverModifier = primary?.modifier(),
-            distanceRemainingMeters = stepProgress.distanceRemaining,
-            announced = announcedThisStep
-        )
-        if (event != null) {
-            announcedThisStep += event.distance
-            speakEvent(event)
-        }
+        // Keep modifier current so voiceInstructionsObserver knows which direction to announce.
+        currentBannerModifier = progress.bannerInstructions?.primary()?.modifier()
 
         val distMiles = progress.distanceRemaining / METERS_PER_MILE
         _distanceRemaining.value = if (distMiles < 0.1f) {
@@ -377,6 +302,26 @@ class NavigationViewModel : ViewModel() {
         }
     }
 
+    val voiceInstructionsObserver = VoiceInstructionsObserver { voiceInstructions ->
+        if (_navState.value !is NavigationState.Navigating) return@VoiceInstructionsObserver
+        val announcement = voiceInstructions.announcement()?.lowercase(Locale.US) ?: return@VoiceInstructionsObserver
+        if (announcement.contains("mile")) return@VoiceInstructionsObserver  // too far out, skip
+        val modifier = currentBannerModifier ?: return@VoiceInstructionsObserver
+        val distance = if (announcement.contains("feet")) {
+            SergeantEvent.Turn.Distance.FEET_500
+        } else {
+            SergeantEvent.Turn.Distance.NOW
+        }
+        val event: SergeantEvent.Turn = when (modifier) {
+            "left", "sharp left" -> SergeantEvent.Turn.Left(distance)
+            "right", "sharp right" -> SergeantEvent.Turn.Right(distance)
+            "slight left" -> SergeantEvent.Turn.SlightLeft(distance)
+            "slight right" -> SergeantEvent.Turn.SlightRight(distance)
+            else -> return@VoiceInstructionsObserver
+        }
+        speakEvent(event)
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────────
 
     private fun checkSpeedWarning(speedMph: Float) {
@@ -400,25 +345,6 @@ class NavigationViewModel : ViewModel() {
             ?.firstOrNull()
             ?.let { Point.fromLngLat(it.longitude, it.latitude) }
     } catch (e: Exception) { null }
-
-    private fun snapPuckToRealGps() {
-        val ctx = appContext ?: return
-        try {
-            val lm = ctx.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return
-            @Suppress("MissingPermission")
-            val androidLoc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                ?: return
-            val mapboxLoc = Location.Builder()
-                .latitude(androidLoc.latitude)
-                .longitude(androidLoc.longitude)
-                .bearing(androidLoc.bearing.toDouble())
-                .timestamp(androidLoc.time)
-                .build()
-            navigationLocationProvider.changePosition(mapboxLoc)
-            _currentLocation.value = Point.fromLngLat(androidLoc.longitude, androidLoc.latitude)
-        } catch (_: Exception) {}
-    }
 
     override fun onCleared() {
         idleController.stop()
