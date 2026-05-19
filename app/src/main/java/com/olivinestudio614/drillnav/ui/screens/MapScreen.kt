@@ -328,7 +328,7 @@ private fun SimSpeedSlider(
             colors = SliderDefaults.colors(
                 thumbColor = AmberAlert,
                 activeTrackColor = AmberAlert,
-                inactiveTrackColor = ArmyGreenDark
+                inactiveTrackColor = OliveDrab
             )
         )
         Text(
