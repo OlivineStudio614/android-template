@@ -57,6 +57,9 @@ class NavigationViewModel : ViewModel() {
     private val _simulationMode = MutableStateFlow(false)
     val simulationMode: StateFlow<Boolean> = _simulationMode
 
+    private val _simPlaybackSpeed = MutableStateFlow(1.0f)
+    val simPlaybackSpeed: StateFlow<Float> = _simPlaybackSpeed
+
     val navigationLocationProvider = NavigationLocationProvider()
 
     private var tts: SergeantTTS? = null
@@ -74,6 +77,11 @@ class NavigationViewModel : ViewModel() {
 
     fun initTts(context: Context) {
         if (tts == null) tts = SergeantTTS(context)
+    }
+
+    fun setSimSpeed(speed: Float) {
+        _simPlaybackSpeed.value = speed
+        mapboxNavigation?.mapboxReplayer?.playbackSpeed(speed.toDouble())
     }
 
     fun toggleSimulation() {
@@ -171,7 +179,7 @@ class NavigationViewModel : ViewModel() {
             val events = ReplayRouteMapper()
                 .mapDirectionsRouteGeometry(state.routes.first().directionsRoute)
             nav.mapboxReplayer.pushEvents(events)
-            nav.mapboxReplayer.playbackSpeed(SIMULATION_PLAYBACK_SPEED)
+            nav.mapboxReplayer.playbackSpeed(_simPlaybackSpeed.value.toDouble())
             nav.mapboxReplayer.play()
         }
     }
@@ -289,6 +297,5 @@ class NavigationViewModel : ViewModel() {
     private companion object {
         const val METERS_PER_MILE = 1609f
         const val MS_TO_MPH = 2.237
-        const val SIMULATION_PLAYBACK_SPEED = 2.0
     }
 }
